@@ -21,6 +21,7 @@
       "WebFetch(domain:docs.rs)",
       "WebFetch(domain:github.com)",
       "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh issue view:*)",
       "Bash(gh run view:*)",
       "Bash(gh run watch:*)",
       "Bash(gh run list:*)"
