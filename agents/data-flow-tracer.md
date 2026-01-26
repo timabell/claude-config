@@ -35,22 +35,22 @@ You are a Principal Systems Architect specializing in tracing data flows across 
 ```markdown
 - **Order Processing**: Order flows API → Payment → Inventory → Fulfillment
   - 🔌 Entry Point: POST /api/orders
-    - [OrdersController.cs:45](https://github.com/company/api/blob/a1b2c3d4e5f6789012345678901234567890abcd/Controllers/OrdersController.cs#L45)
+    - [`OrdersController.cs:45`](https://github.com/company/api/blob/a1b2c3d4e5f6789012345678901234567890abcd/Controllers/OrdersController.cs#L45)
     - Schema: `{ customerId, items[], paymentMethod }`
   - 🌐 Order Service: Creates order, publishes to `order-events`
-    - [OrderService.cs:128-145](https://github.com/company/api/blob/a1b2c3d4e5f6789012345678901234567890abcd/Services/OrderService.cs#L128-L145)
+    - [`OrderService.cs:128-145`](https://github.com/company/api/blob/a1b2c3d4e5f6789012345678901234567890abcd/Services/OrderService.cs#L128-L145)
     - 💿 Saves to OrdersDB `Orders` table
       - 🔑 Connection: Key Vault `OrdersDB-ConnectionString`
-      - ⚙️ Config: [appsettings.Production.json:15](https://github.com/company/api/blob/a1b2c3d4e5f6789012345678901234567890abcd/appsettings.Production.json#L15)
+      - ⚙️ Config: [`appsettings.Production.json:15`](https://github.com/company/api/blob/a1b2c3d4e5f6789012345678901234567890abcd/appsettings.Production.json#L15)
   - ⚡ Payment Processor: Function app processes payment
-    - 📥 Trigger: `order-events` topic subscription from [host.json:12](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/host.json#L12)
-    - [PaymentFunction.cs:34](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/PaymentFunction.cs#L34)
+    - 📥 Trigger: `order-events` topic subscription from [`host.json:12`](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/host.json#L12)
+    - [`PaymentFunction.cs:34`](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/PaymentFunction.cs#L34)
     - 🚦 Feature flag: `use-new-payment-gateway` controls routing
       - Calls payment gateway wrapper
-        - [PaymentGatewayClient.cs:89](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/Clients/PaymentGatewayClient.cs#L89)
+        - [`PaymentGatewayClient.cs:89`](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/Clients/PaymentGatewayClient.cs#L89)
           - Selects provider based on feature flag (Stripe vs PayPal)
             - 🔑 Retrieves credentials from Secrets Manager `payment-gateway/api-key`
-              - [CredentialService.cs:23](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/Services/CredentialService.cs#L23-L56)
+              - [`CredentialService.cs:23-56`](https://github.com/company/functions/blob/b2c3d4e5f6789012345678901234567890abcdef/Services/CredentialService.cs#L23-L56)
                 - Uses AWS SDK SecretsManagerClient with caching
                   - ⚙️ Cache TTL from env var `CREDENTIAL_CACHE_MINUTES`
                   - 🔄 Circuit breaker pattern
@@ -63,7 +63,7 @@ You are a Principal Systems Architect specializing in tracing data flows across 
     - ❌ Failure: 3 retries → `payment-dlq` → PagerDuty alert
   - 🌐 Inventory Service: Reserves stock, publishes to region-specific queue
     - 📥 Trigger: `payment-events` subscription
-    - ⚙️ Region routing: [appsettings.json:34](https://github.com/company/inventory/blob/c3d4e5f6789012345678901234567890abcdef12/appsettings.json#L34) → `fulfillment-us-east` or `fulfillment-eu-west`
+    - ⚙️ Region routing: [`appsettings.json:34`](https://github.com/company/inventory/blob/c3d4e5f6789012345678901234567890abcdef12/appsettings.json#L34) → `fulfillment-us-east` or `fulfillment-eu-west`
   - ❌ Error Paths: Payment DLQ → PagerDuty, Inventory conflict → customer notification
 ```
 
