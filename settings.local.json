@@ -23,6 +23,7 @@
       "Bash(npm view:*)",
       "Bash(npm owner:*)",
       "Bash(npm test:*)",
+      "Bash(adb logcat:*)",
       "WebFetch(domain:crates.io)",
       "WebFetch(domain:docs.rs)",
       "WebFetch(domain:github.com)",
