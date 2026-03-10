@@ -31,7 +31,8 @@
       "Bash(gh issue view:*)",
       "Bash(gh run view:*)",
       "Bash(gh run watch:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(./build-android.sh:*)"
     ],
     "deny": []
   }
