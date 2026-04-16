@@ -4,6 +4,7 @@
     "allow": [
       "Bash(find:*)",
       "Bash(cat:*)",
+      "Bash(ls:*)",
       "Bash(mkdir:*)",
       "Bash(grep:*)",
       "Bash(git diff:*)",
@@ -32,8 +33,7 @@
       "Bash(gh issue view:*)",
       "Bash(gh run view:*)",
       "Bash(gh run watch:*)",
-      "Bash(gh run list:*)",
-      "Bash(./build-android.sh:*)"
+      "Bash(gh run list:*)"
     ],
     "deny": []
   }
