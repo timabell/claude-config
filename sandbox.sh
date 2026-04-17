@@ -1,12 +1,27 @@
 #!/usr/bin/env bash
 # bwrap sandbox for running claude & npm/dotnet builds
-# Run in the folder containing what you want to work on and it will be mounted at ~/work
+# Usage: sandbox.sh [path ...]
+#   No args:  mounts $PWD at ~/work
+#   One path: mounts that path at ~/work
+#   2+ paths: mounts each at ~/work/<basename>
 # Inpsired by https://patrickmccanna.net/a-detailed-writeup-of-claude-code-constrained-by-bubblewrap/
 # Depends on bubblewrap https://github.com/containers/bubblewrap
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SANDBOX_HOME="/home/user"
 MISE_DATA="$HOME/.local/share/mise"
+
+# Collect paths: default to $PWD if none given
+paths=("$@")
+if [[ ${#paths[@]} -eq 0 ]]; then
+  paths=("$PWD")
+fi
+
+# Resolve all paths to absolute
+resolved=()
+for p in "${paths[@]}"; do
+  resolved+=("$(readlink -f "$p")")
+done
 
 args=(
   --ro-bind /usr /usr                   # core binaries (bash, coreutils, etc.)
@@ -38,16 +53,32 @@ args=(
   # shell profile that activates mise
   --ro-bind "$SCRIPT_DIR/sandbox.bashrc" "$SANDBOX_HOME/.bashrc"
 
-  # working directory (read-write)
-  --bind "$PWD" "$SANDBOX_HOME/work"
-
   --unshare-pid                         # own PID namespace so /proc doesn't leak host processes
   # --new-session not needed: TIOCSTI injection blocked by kernel ≥6.2 (LEGACY_TIOCSTI=n)
 
   --setenv HOME "$SANDBOX_HOME"         # remap HOME so tools write to sandbox
-  --setenv SANDBOX_OUTER_PWD "$PWD"     # real path shown in shell prompt
-  --chdir "$SANDBOX_HOME/work"          # start in the working directory
-
 )
+
+# Mount working directories and set SANDBOX_OUTER_PWD
+if [[ ${#resolved[@]} -eq 1 ]]; then
+  # Single path: mount directly at ~/work (original behaviour)
+  args+=(
+    --bind "${resolved[0]}" "$SANDBOX_HOME/work"
+    --setenv SANDBOX_OUTER_PWD "${resolved[0]}"
+  )
+else
+  # Multiple paths: mount each at ~/work/<basename>
+  # Create a tmpfs at ~/work so subdirectories can be bind-mounted into it
+  args+=(--tmpfs "$SANDBOX_HOME/work")
+  outer_list=""
+  for p in "${resolved[@]}"; do
+    name="$(basename "$p")"
+    args+=(--bind "$p" "$SANDBOX_HOME/work/$name")
+    outer_list+="${outer_list:+:}$p"
+  done
+  args+=(--setenv SANDBOX_OUTER_PWD "$outer_list")
+fi
+
+args+=(--chdir "$SANDBOX_HOME/work")    # start in the working directory
 
 bwrap "${args[@]}" -- /usr/bin/bash
