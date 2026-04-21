@@ -37,6 +37,7 @@ args=(
   --ro-bind /etc/nsswitch.conf /etc/nsswitch.conf
   --ro-bind /etc/hosts /etc/hosts
   --ro-bind /etc/ssl /etc/ssl           # TLS certificates (HTTPS for nuget, npm, claude API)
+  --ro-bind /etc/passwd /etc/passwd     # user name resolution (needed for `claude --resume` to work)
 
   # mise-managed toolchains (node, dotnet, claude)
   --ro-bind "$MISE_DATA" "$SANDBOX_HOME/.local/share/mise"
