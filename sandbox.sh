@@ -57,7 +57,11 @@ args=(
   --unshare-pid                         # own PID namespace so /proc doesn't leak host processes
   # --new-session not needed: TIOCSTI injection blocked by kernel ≥6.2 (LEGACY_TIOCSTI=n)
 
+  --clearenv                            # wipe host env; only explicitly set vars are visible
   --setenv HOME "$SANDBOX_HOME"         # remap HOME so tools write to sandbox
+  --setenv USER "user"
+  --setenv TERM "${TERM:-xterm-256color}"
+  --setenv PATH "/usr/local/bin:/usr/bin:/bin"  # minimal PATH; mise activate extends it
 )
 
 # Mount working directories and set SANDBOX_OUTER_PWD
