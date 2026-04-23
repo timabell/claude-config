@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # bwrap sandbox for running claude & npm/dotnet builds
-# Usage: sandbox.sh [path ...]
+# Usage: sandbox.sh [path ...] [-- extra-bwrap-args ...]
 #   No args:  mounts $PWD at ~/work
 #   One path: mounts that path at ~/work
 #   2+ paths: mounts each at ~/work/<basename>
+#   --:       everything after "--" is passed directly to bwrap (e.g. --setenv, --ro-bind)
 # Inspired by https://patrickmccanna.net/a-detailed-writeup-of-claude-code-constrained-by-bubblewrap/
 # Depends on bubblewrap https://github.com/containers/bubblewrap
 #
@@ -44,6 +45,17 @@
 #     data or pull further payloads. Network filtering (e.g. via slirp4netns
 #     or firewall rules) is a future improvement.
 #
+# Two-sandbox pattern (extra bwrap args via "--"):
+#   Some projects need secrets at runtime (OAuth client IDs, API keys) but
+#   Claude should never see them — anything it can read, it can exfiltrate
+#   via normal API conversation. Pass secrets to a build sandbox via
+#   "--" and bwrap's --setenv (e.g. sandbox.sh ~/work -- --setenv KEY val).
+#   Running two sandboxes on the same working directory — one with secrets
+#   for builds, one without for Claude — gives the build process what it
+#   needs while keeping secrets out of Claude's environment, filesystem,
+#   and /proc. The working directory is bind-mounted into both, so Claude's
+#   edits are immediately visible to the build sandbox (and vice versa).
+#
 # Not yet covered:
 #   - Exfiltration of tokens that must be present to function: the AI's own
 #     API auth tokens (~/.claude, ~/.claude.json) and build secrets needed for
@@ -59,11 +71,20 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SANDBOX_HOME="/home/user"
 MISE_DATA="$HOME/.local/share/mise"
 
-# Collect paths: default to $PWD if none given
-paths=("$@")
-if [[ ${#paths[@]} -eq 0 ]]; then
-  paths=("$PWD")
-fi
+# Split args on "--": paths before, extra bwrap args after
+paths=()
+extra_args=()
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "--" ]]; then
+    shift
+    extra_args=("$@")
+    break
+  fi
+  paths+=("$1")
+  shift
+done
+# Default to $PWD if no paths given
+if [[ ${#paths[@]} -eq 0 ]]; then paths=("$PWD"); fi
 
 # Resolve all paths to absolute
 resolved=()
@@ -131,6 +152,9 @@ else
   done
   args+=(--setenv SANDBOX_OUTER_PWD "$outer_list")
 fi
+
+# Append any extra bwrap args passed after "--"
+args+=("${extra_args[@]}")
 
 args+=(--chdir "$SANDBOX_HOME/work")    # start in the working directory
 
