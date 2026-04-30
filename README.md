@@ -6,11 +6,15 @@ Claude Code config for allowed commands and "agents"
 
 1. Add .claude to user-wide .gitignore
 2. Symlink this repo into target repo as .claude/
-3. Hope that claude code is listening
+3. Symlink `global/CLAUDE.md` into `~/.claude/CLAUDE.md` to give claude guidance across all repos
+4. Hope that claude code is listening
 
-# CLAUDE.md
+```
+ln -s ~/repo/claude-config/global/CLAUDE.md ~/.claude/
+cd somerepo
+ln -s ~/repo/claude-config .claude
+```
 
-My machine-wide [CLAUDE.md is in my dotfiles](https://github.com/timabell/dotmatrix/blob/main/custom/.claude/CLAUDE.md)
 
 ## License
 
